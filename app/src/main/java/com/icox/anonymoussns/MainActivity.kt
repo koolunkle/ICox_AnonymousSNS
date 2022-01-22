@@ -1,42 +1,26 @@
 package com.icox.anonymoussns
 
+import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
+import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
-
-    // 로그에 사용할 문자열
-    val TAG = "MainAtivity"
-
-    // test 키를 가진 데이터의 참조 객체를 가져온다
-    val ref = FirebaseDatabase.getInstance().getReference("test")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // 값의 변경이 있는 경우의 이벤트 Listener 를 추가한다
-        ref.addValueEventListener(object : ValueEventListener {
-            // 데이터 변경이 감지되면 호출된다
-            override fun onDataChange(snapshot: DataSnapshot) {
-//                test 키를 가진 데이터 snapshot 에서 값을 읽고 문자열로 변경한다
-                val message = snapshot.value.toString()
-//                읽은 문자열 로깅
-                Log.d(TAG, message)
-//                Firebase 에서 전달받은 메세지로 제목을 변경한다
-                supportActionBar?.title = message
-            }
+        // ActionBar 의 타이틀을 "글목록"으로 변경
+        supportActionBar?.title = "글목록"
 
-            // 데이터 읽기가 취소된 경우 호출된다 -> e.g. 데이터 권한이 없는 경우
-            override fun onCancelled(error: DatabaseError) {
-                error.toException().printStackTrace()
-            }
-        })
+        // floatingActionButton 이 클릭될 때의 Listener 를 설정한다
+        floatingActionButton.setOnClickListener {
+//            Intent 생성
+            val intent = Intent(this@MainActivity, WriteActivity::class.java)
+//            Intent 로 WriteActivity 실행
+            startActivity(intent)
+        }
     }
 
 }
