@@ -181,6 +181,16 @@ class MainActivity : AppCompatActivity() {
             holder.timeTextView.text = getDiffTimeText(post.writeTime as Long)
             // 댓글 개수는 0으로 세팅
             holder.commentCountText.text = "0"
+
+            // 카드가 클릭된 경우 DetailActivity 를 실행한다
+            holder.itemView.setOnClickListener {
+                // 상세화면을 호출할 Intent 를 생성한다
+                val intent = Intent(this@MainActivity, DetailActivity::class.java)
+                // 선택된 카드의 ID 정보를 Intent 에 추가한다
+                intent.putExtra("postId", post.postId)
+                // intent 로 상세화면을 시작한다
+                startActivity(intent)
+            }
         }
 
         // RecyclerView 에서 몇개의 행을 그리는지 기준이 되는 메소드
