@@ -36,12 +36,24 @@ class WriteActivity : AppCompatActivity() {
     // 현재 선택된 배경 이미지의 position 을 저장하는 변수
     var currentBackgroundPosition = 0
 
+    // 글쓰기 모드를 저장하는 변수
+    var mode = "post"
+
+    // 댓글 쓰기인 경우 글의 ID
+    var postId = ""
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_write)
 
-        // ActionBar 의 타이틀을 "글쓰기"로 변경
-        supportActionBar?.title = "글쓰기"
+        // 전달받은 intent 에서 댓글 모드인지 확인한다
+        intent.getStringExtra("mode")?.let {
+            mode = it
+            postId = intent.getStringExtra("postId") ?: ""
+        }
+
+        // ActionBar 의 타이틀을 조건에 따라 "글쓰기" 또는 "댓글쓰기"로 변경
+        supportActionBar?.title = if (mode == "post") "글쓰기" else "댓글쓰기"
 
         // recyclerView 에서 사용할 layoutManager 를 생성한다
         val layoutManager = LinearLayoutManager(this@WriteActivity)
@@ -62,26 +74,48 @@ class WriteActivity : AppCompatActivity() {
                 Toast.makeText(applicationContext, "메시지를 입력하세요", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            // Post 객체 생성
-            val post = Post()
-            // Firebase 의 Posts 참조에서 객체를 저장하기 위한 새로운 key 를 생성하고 newRef 에 참조 저장
-            val newRef = FirebaseDatabase.getInstance().getReference("Posts").push()
-
-            // 글이 쓰여진 시간은 Firebase 서버 시간으로 설정
-            post.writeTime = ServerValue.TIMESTAMP
-            // 배경 Uri 주소를 현재 선택된 배경의 주소로 할당
-            post.backgroundUri = backgroundList[currentBackgroundPosition]
-            // 메세지는 input 의 텍스트 내용을 할당
-            post.message = input.text.toString()
-            // 글쓴 사람의 ID는 디바이스의 아이디로 할당
-            post.writerId = getMyId()
-            // 글의 ID는 새로 생성된 Firebase 참조의 key 로 할당
-            post.postId = newRef.key.toString()
-            // Post 객체를 새로 생성한 참조에 저장
-            newRef.setValue(post)
-            // 저장 성공 토스트 알림을 보여주고 Activity 종료
-            Toast.makeText(applicationContext, "공유되었습니다", Toast.LENGTH_SHORT).show()
-            finish()
+            if (mode == "post") {
+                // Post 객체 생성
+                val post = Post()
+                // Firebase 의 Posts 참조에서 객체를 저장하기 위한 새로운 key 를 생성하고 참조를 newRef 에 저장
+                val newRef = FirebaseDatabase.getInstance().getReference("Posts").push()
+                // 글이 쓰여진 시간은 Firebase 서버의 시간으로 설정
+                post.writeTime = ServerValue.TIMESTAMP
+                // backgroundUri 를 currentBackgroundPosition 으로 할당
+                post.backgroundUri = backgroundList[currentBackgroundPosition]
+                // 메세지는 input 의 텍스트 내용 할당
+                post.message = input.text.toString()
+                // 글쓴 사람의 ID는 디바이스의 아이디로 할당
+                post.writerId = getMyId()
+                // 글의 ID는 새로 생성된 Firebase 참조의 key 로 할당
+                post.postId = newRef.key.toString()
+                // Post 객체를 newRef 에 저장
+                newRef.setValue(post)
+                // 저장 성공 토스트 알림을 보여주고 Activity 종료
+                Toast.makeText(applicationContext, "게시글이 공유되었습니다", Toast.LENGTH_SHORT).show()
+                finish()
+            } else {
+                val comment = Comment()
+                // Firebase 의 Comment 참조에서 객체를 저장하기 위한 새로운 key 를 생성하고 참조를 newRef 에 저장
+                val newRef = FirebaseDatabase.getInstance().getReference("Comments/$postId").push()
+                // 글이 쓰여진 시간은 Firebase 서버의 시간으로 설정
+                comment.writeTime = ServerValue.TIMESTAMP
+                // backgroundUri 를 currentBackgroundPosition 으로 할당
+                comment.backgroundUri = backgroundList[currentBackgroundPosition]
+                // 메세지는 input 의 텍스트 내용 할당
+                comment.message = input.text.toString()
+                // 글쓴 사람의 ID는 디바이스의 아이디로 할당
+                comment.writerId = getMyId()
+                // 글의 ID는 새로 생성된 Firebase 참조의 key 로 할당
+                comment.commentId = newRef.key.toString()
+                // 댓글이 속한 글의 ID
+                comment.postId = postId
+                // Comment 객체를 newRef 에 저장
+                newRef.setValue(comment)
+                // 저장 성공 토스트 알림을 보여주고 Activity 종료
+                Toast.makeText(applicationContext, "댓글이 공유되었습니다", Toast.LENGTH_SHORT).show()
+                finish()
+            }
         }
     }
 
